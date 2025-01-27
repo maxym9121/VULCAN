@@ -454,8 +454,7 @@ def make_chemdf(re_table, ofname):
                     re_sp_dic[sp].append(int(i[k_start:k_end]))
 
         ost = ost[0:-1]
-        ost += "]"
-        ost += "\n"
+        ost += "]\n"
     ost += "\t return np.array(rate_str[sp]) \n\n".expandtabs(3)
     ofstr += ost
 
@@ -541,7 +540,7 @@ def make_Gibbs(re_table, gibbs_text, ofname):
             # because set exclude duplicates
 
             # v_i() is the rate equation function for i
-            rate_str = "v_" + str(j) + "("
+            rate_str = f"v_{j}("
 
             reac_noM = [ele for ele in reac if not ele[1] == "M"]
             prod_noM = [ele for ele in prod if not ele[1] == "M"]
@@ -549,7 +548,7 @@ def make_Gibbs(re_table, gibbs_text, ofname):
 
             for term in [ele for ele in reac_args if not ele == "M"]:
                 rate_str += f"y[{chem_dict[term]}], "
-            rate_str = rate_str[0:-2] + ")"
+            rate_str = f"{rate_str[0:-2]})"
 
             v_exp += f"k[{j}]*"
             for term in reac:
@@ -560,123 +559,111 @@ def make_Gibbs(re_table, gibbs_text, ofname):
                         v_exp += (f"y[{chem_dict[term[1]]}]**{term[0]}*")
                 else:
                     if term[1] == "M":
-                        v_exp += term[1] + "*"
+                        v_exp += f"{term[1]}*"
                     else:
-                        v_exp += "y[" + str(chem_dict[term[1]]) + "]*"
+                        v_exp += f"y[{chem_dict[term[1]]}]*"
             v_exp = v_exp[0:-1]  # Delete the last '*'
 
-            v_exp += " - k[" + str(j + 1) + "]*"
+            v_exp += f" - k[{j+1}]*"
             for term in prod:
                 if term[0] != 1:
                     if term[1] == "M":
-                        v_exp += term[1] + "**" + str(term[0]) + "*"
+                        v_exp +=  + f"{term[1]}**{term[0]}*"
                     else:
-                        v_exp += (
-                            "y["
-                            + str(chem_dict[term[1]])
-                            + "]"
-                            + "**"
-                            + str(term[0])
-                            + "*"
-                        )
+                        v_exp += f"y[{chem_dict[term[1]]}]**{term[0]}*"
                 else:
                     if term[1] == "M":
-                        v_exp += term[1] + "*"
+                        v_exp += f"{term[1]}*"
                     else:
-                        v_exp += "y[" + str(chem_dict[term[1]]) + "]*"
+                        v_exp += f"y[{chem_dict[term[1]]}]*"
             v_exp = v_exp[0:-1]  # Delete the last '*'
 
             for term in reac_noM:
                 # term[0] is the stoi-number of the species
                 reac_dict[chem_dict[term[1]]] += " -" + str(term[0]) + "*" + rate_str
                 if term[0] == 1:
-                    exp_reac_dict[chem_dict[term[1]]] += " -" + "(" + v_exp + ")"
+                    # exp_reac_dict[chem_dict[term[1]]] += " -" + "(" + v_exp + ")"
+                    exp_reac_dict[chem_dict[term[1]]] += f" -({v_exp})"
                     count += 1
                 else:
-                    exp_reac_dict[chem_dict[term[1]]] += (
-                        " -" + str(term[0]) + "*(" + v_exp + ")"
-                    )
+                    exp_reac_dict[chem_dict[term[1]]] += f" -{term[0]}*({v_exp})"
                     count += 1
 
             for term in prod_noM:
-                reac_dict[chem_dict[term[1]]] += " +" + str(term[0]) + "*" + rate_str
+                reac_dict[chem_dict[term[1]]] += f" +{term[0]}*{rate_str}"
                 if term[0] == 1:
-                    exp_reac_dict[chem_dict[term[1]]] += " +" + "(" + v_exp + ")"
+                    exp_reac_dict[chem_dict[term[1]]] += f" +({v_exp})"
                     count += 1
                 else:
                     exp_reac_dict[chem_dict[term[1]]] += (
-                        " +" + str(term[0]) + "*(" + v_exp + ")"
+                        f" +{term[0]}*({v_exp})"
                     )
                     count += 1
 
             ######################## for constructing Gibbs free energy ########################
             for term in reac_noM:
-                gibbs += "-" + str(term[0]) + "*" + "gibbs_sp('" + str(term[1]) + "',T)"
+                gibbs += f"-{term[0]}*gibbs_sp('{term[1]}',T)"
                 reac_num += term[0]
 
             for term in prod_noM:
-                gibbs += "+" + str(term[0]) + "*" + "gibbs_sp('" + str(term[1]) + "',T)"
+                gibbs += f"+{term[0]}*gibbs_sp('{term[1]}',T)"
                 prod_num += term[0]
 
             gibbs += " ) )"
             if prod_num - reac_num != 0:
-                gibbs += "*(corr*T)**" + str(reac_num - prod_num)
+                gibbs += f"*(corr*T)**{reac_num - prod_num}"
             gibbs_dict[j] = gibbs
             ######################## for constructing Gibbs free energy ########################
 
-            v_str = "#" + line + "\n"
-            v_str += "v_" + str(j) + " = lambda "
+            v_str = f"#{line}\n"
+            v_str += f"v_{j} = lambda "
 
             for term in reac_args_noM:
-                v_str += term + ", "
-            v_str = v_str[0:-2] + " : "
+                v_str += f"{term}, "
+            v_str = f"{v_str[0:-2]} : "
             # j: ->
             # j+1: <-
-            v_str += "k[" + str(j) + "]*"
+            v_str += f"k[{j}]*"
             for term in reac:
                 if term[0] != 1:
-                    v_str += term[1] + "**" + str(term[0]) + "*"
+                    v_str += f"{term[1]}**{term[0]}*"
                 else:
-                    v_str += term[1] + "*"
+                    v_str += f"{term[1]}*"
             v_str = v_str[0:-1]  # Delete the last '*'
 
-            v_str += " - k[" + str(j + 1) + "]*"
+            v_str += f" - k[{j+1}]*"
             for term in prod:
                 if term[0] != 1:
-                    v_str += term[1] + "**" + str(term[0]) + "*"
+                    v_str += f"{term[1]}**{term[0]}*"
                 else:
-                    v_str += term[1] + "*"
+                    v_str += f"{term[1]}*"
             v_str = v_str[0:-1]
 
             reac_list.append(v_str)
 
             # ouput of each single rate from k1...
-            rate_exp += "k[" + str(j) + "]*"
+            rate_exp += f"k[{j}]*"
             for term in reac:
                 if term[1] == "M":
                     rate_exp += "M*"
                 else:
                     if term[0] == 1:
-                        rate_exp += "y[" + str(chem_dict[term[1]]) + "]*"
+                        rate_exp += f"y[{chem_dict[term[1]]}]*"
                     else:
-                        rate_exp += (
-                            "y[" + str(chem_dict[term[1]]) + "]**" + str(term[0]) + "*"
-                        )
+                        rate_exp += f"y[{chem_dict[term[1]]}]**{term[0]}*"
 
             rate_exp = rate_exp[0:-1]  # Delete the last '*'
             rate_dict[j] = rate_exp
             rate_exp = ""
-            rate_exp += "k[" + str(j + 1) + "]*"  # j+1 even number for reverse index
+            rate_exp += f"k[{j + 1}]*"  # j+1 even number for reverse index
             for term in prod:
                 if term[1] == "M":
                     rate_exp += "M*"
                 else:
                     if term[0] == 1:
-                        rate_exp += "y[" + str(chem_dict[term[1]]) + "]*"
+                        rate_exp += f"y[{chem_dict[term[1]]}]*"
                     else:
-                        rate_exp += (
-                            "y[" + str(chem_dict[term[1]]) + "]**" + str(term[0]) + "*"
-                        )
+                        rate_exp += f"y[{chem_dict[term[1]]}]**{term[0]}*"
             rate_exp = rate_exp[0:-1]  # Delete the last '*'
             rate_dict[j + 1] = rate_exp
 
@@ -711,9 +698,9 @@ def make_jac(ni, nr, ofname):
     y, k = [], []
 
     for i in range(ni):
-        y.append(Symbol("y[:," + str(i) + "]"))
+        y.append(Symbol(f"y[:,{i}]"))
     for i in range(nr + 1):
-        k.append(Symbol("k[" + str(i) + "]"))
+        k.append(Symbol(f"k[{i}]"))
 
     # chemistry is the "ofname" module
     dy = Matrix(chemistry.df(y, M, k))
@@ -754,9 +741,9 @@ def make_neg_jac(ni, nr, ofname):
     y, k = [], []
 
     for i in range(ni):
-        y.append(Symbol("y[:," + str(i) + "]"))
+        y.append(Symbol(f"y[:,{i}]"))
     for i in range(nr + 1):
-        k.append(Symbol("k[" + str(i) + "]"))
+        k.append(Symbol(f"k[{i}]"))
 
     # chemistry is the "ofname" module
     dy = Matrix(chemistry.df(y, M, k))
@@ -813,7 +800,7 @@ def check_conserv():
             prod_atoms += np.array(list(compo[compo_row.index(sp)])[1 : num_atoms + 1])
 
         if not np.all(reac_atoms == prod_atoms):
-            print("Re " + str(re) + " not conserving element!")
+            print(f"Re {re} not conserving element!")
             conserv_check = False
 
     if conserv_check:
@@ -847,12 +834,7 @@ def check_duplicate(nr, photo_re_indx):
                     if {re, re_oth} not in dup_list:
                         dup_list.append({re, re_oth})
                         print(
-                            "Re"
-                            + str(re)
-                            + " and "
-                            + "Re"
-                            + str(re_oth)
-                            + " are duplicates!"
+                            f"Re{re} and Re{re_oth} are duplicates!"
                         )
 
     if not dup_list:

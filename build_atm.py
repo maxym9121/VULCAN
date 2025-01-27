@@ -93,7 +93,7 @@ class InitialAbun(object):
         # depending on including ion or not (whether there is e- in the fastchem elemental abundance dat)
         tmp_str = ""
         solar_ele = str(Path('.') / "fastchem_vulcan" / "input" / "solar_element_abundances.dat")  # Path object
-        if vulcan_cfg.use_ion == True:
+        if vulcan_cfg.use_ion:
             copyfile(
                 str(Path('.') / "fastchem_vulcan" / "input" / "parameters_ion.dat"),
                 str(Path('.') / "fastchem_vulcan" / "input" / "parameters.dat"),
@@ -127,7 +127,7 @@ class InitialAbun(object):
                 "Fe",
             ]
 
-            if vulcan_cfg.use_solar == True:
+            if vulcan_cfg.use_solar:
                 new_str = f.read()  # read in as a string
                 print("Initializing with the default solar abundance.")
 
@@ -140,10 +140,10 @@ class InitialAbun(object):
 
                     if sp in ele_list:
                         # read-in vulcan_cfg.sp_H
-                        sp_abun = getattr(vulcan_cfg, sp + "_H")
+                        sp_abun = getattr(vulcan_cfg, f"{sp}_H")
                         fc_abun = 12.0 + np.log10(sp_abun)
-                        line = sp + "\t" + "{0:.4f}".format(fc_abun) + "\n"
-                        print("{:4}".format(sp) + "{0:.4E}".format(sp_abun))
+                        line =  + f"{sp}\t{fc_abun:.4f}\n"
+                        print(f"{sp:4}{sp_abun:.4E}")
 
                     elif (
                         sp in fc_list
@@ -161,7 +161,7 @@ class InitialAbun(object):
                             )
 
                         new_ratio = float(sol_ratio) + np.log10(met_scale)
-                        line = sp + "\t" + "{0:.4f}".format(new_ratio) + "\n"
+                        line = f"{sp}\t{new_ratio:.4f}\n"
 
                     new_str += line
 
@@ -174,10 +174,7 @@ class InitialAbun(object):
             ost = "#p (bar)    T (K)\n"
             for n, p in enumerate(data_atm.pco):  # p in bar in fast_chem
                 ost += (
-                    "{:.3e}".format(p * 1.0e-6)
-                    + "\t"
-                    + "{:.1f}".format(data_atm.Tco[n])
-                    + "\n"
+                    f"{p * 1.0e-6:.3e}\t{data_atm.Tco[n]:.1f}\n"
                 )
             ost = ost[:-1]
             f.write(ost)
@@ -229,7 +226,7 @@ class InitialAbun(object):
                     )  # this also changes data_var.y because the address of y array has passed to y_ini
 
                 else:
-                    print(sp + " not included in fastchem.")
+                    print(f"{sp} not included in fastchem.")
 
                 if vulcan_cfg.use_ion:
                     if compo[compo_row.index(sp)]["e"] != 0:
@@ -354,12 +351,7 @@ class InitialAbun(object):
                             data_atm.conden_min_lev = conden_min_lev
 
                             print(
-                                sp
-                                + " condensed from nz = "
-                                + str(conden_bot)
-                                + " to the minimum level nz = "
-                                + str(conden_min_lev)
-                                + " (cold trap)"
+                                + f"{sp} condensed from nz = {conden_bot} to the minimum level nz = {conden_min_lev} (cold trap)"
                             )
                             # data_var.y[conden_min_lev:,species.index(sp)] = (y_ini[conden_min_lev,species.index(sp)]/data_atm.n_0[conden_min_lev]) *data_atm.n_0[conden_min_lev:]
                             data_var.y[conden_min_lev:, species.index(sp)] = (
@@ -720,7 +712,7 @@ class Atm(object):
         Hp = data_atm.Hp
 
         if (
-            vulcan_cfg.rocky == False and self.P_b >= 1e6
+            not vulcan_cfg.rocky and self.P_b >= 1e6
         ):  # if the lower BC greater than 1bar for gas giants
             # Find the index of pico closest to 1bar
             pref_indx = min(range(nz + 1), key=lambda i: abs(np.log10(pico[i]) - 6.0))
@@ -763,7 +755,7 @@ class Atm(object):
         # for the j grid, dzi[j] from the grid above and dz[j-1] from the grid below
 
         # for the molecular diffsuion
-        if vulcan_cfg.use_moldiff == True:
+        if vulcan_cfg.use_moldiff:
             Ti = 0.5 * (Tco + np.roll(Tco, -1))
             data_atm.Ti = Ti[:-1]
             Hpi = 0.5 * (Hp + np.roll(Hp, -1))

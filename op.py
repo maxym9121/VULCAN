@@ -303,8 +303,6 @@ class ReadRate(object):
                 var.k_fun[i] = lambda temp, mm, i=i: var.k_fun[i-1](temp, mm)/chem_funs.Gibbs(i-1,temp)
                 var.k[i] = var.k[i-1]/chem_funs.Gibbs(i-1,Tco)
             
-            # if np.any(var.k[i] > 1.e-6): print ('R' + str(i) + " " + var.Rf[i-1] +' :  ' + str(np.max(var.k[i])) )
-            # if np.any(var.k[i-1] > 1.e-6): print ('R' + str(i-1) + " " + var.Rf[i-1] + ' :  ' + str(np.max(var.k[i-1])) )        
             if np.any(var.k[i] > 1.e-6): print (f'R{i} {var.Rf[i-1]} :  {np.max(var.k[i])}')
             if np.any(var.k[i-1] > 1.e-6): print (f'R{i-1} {var.Rf[i-1]} :  {np.max(var.k[i-1])}')
 
@@ -511,8 +509,6 @@ class ReadRate(object):
         cross_T_raw = {}
         
         # In the end, we do not need photons beyond the longest-wavelength threshold from all species (different from absorption)
-        # sp_label = np.genfromtxt(vulcan_cfg.cross_folder+'thresholds.txt',dtype=str, usecols=0) # taking the first column as labels
-        # lmd_data = np.genfromtxt(vulcan_cfg.cross_folder+'thresholds.txt', skip_header = 1)[:,1] # discarding the fist column
         sp_label = np.genfromtxt(f'{vulcan_cfg.cross_folder}thresholds.txt',dtype=str, usecols=0) # taking the first column as labels
         lmd_data = np.genfromtxt(f'{vulcan_cfg.cross_folder}thresholds.txt', skip_header = 1)[:,1] # discarding the fist column
 
@@ -524,33 +520,24 @@ class ReadRate(object):
         for n, sp in enumerate(absp_sp):   
             
             if vulcan_cfg.use_ion:
-                # try: cross_raw[sp] = np.genfromtxt(vulcan_cfg.cross_folder+sp+'/'+sp+'_cross.csv',dtype=float,delimiter=',',skip_header=1, names = ['lambda','cross','disso','ion'])
-                # except: print ('\nMissing the cross section from ' + sp); raise
                 try: cross_raw[sp] = np.genfromtxt(f'{vulcan_cfg.cross_folder}{sp}/{sp}_cross.csv',dtype=float,delimiter=',',skip_header=1, names = ['lambda','cross','disso','ion'])
                 except: print (f'\nMissing the cross section from {sp}'); raise
                 if sp in ion_sp:
-                    # try: ion_ratio_raw[sp] = np.genfromtxt(vulcan_cfg.cross_folder+sp+'/'+sp+'_ion_branch.csv',dtype=float,delimiter=',',skip_header=1, names = True)
-                    # except: print ('\nMissing the ion branching ratio from ' + sp); raise
                     try: ion_ratio_raw[sp] = np.genfromtxt(f'{vulcan_cfg.cross_folder}{sp}/{sp}_ion_branch.csv',dtype=float,delimiter=',',skip_header=1, names = True)
                     except: print (f'\nMissing the ion branching ratio from {sp}'); raise
             else: 
-                # try: cross_raw[sp] = np.genfromtxt(vulcan_cfg.cross_folder+sp+'/'+sp+'_cross.csv',dtype=float,delimiter=',',skip_header=1, names = ['lambda','cross','disso'])
-                # except: print ('\nMissing the cross section from ' + sp); raise
                 try: cross_raw[sp] = np.genfromtxt(f"{vulcan_cfg.cross_folder}{sp}/{sp}_cross.csv",dtype=float,delimiter=',',skip_header=1, names = ['lambda','cross','disso'])
                 except: print (f'\nMissing the cross section from {sp}'); raise
             
             # reading in the branching ratios
             # for i in range(1,var.n_branch[sp]+1): # branch index should start from 1
             if sp in photo_sp: # excluding ion_sp 
-                # try: ratio_raw[sp] = np.genfromtxt(vulcan_cfg.cross_folder+sp+'/'+sp+'_branch.csv',dtype=float,delimiter=',',skip_header=1, names = True)
-                # except: print ('\nMissing the branching ratio from ' + sp); raise
                 try: ratio_raw[sp] = np.genfromtxt(f'{vulcan_cfg.cross_folder}{sp}/{sp}_branch.csv',dtype=float,delimiter=',',skip_header=1, names = True)
                 except: print (f'\nMissing the branching ratio from {sp}'); raise
                 
             # reading in temperature dependent cross sections
             if sp in vulcan_cfg.T_cross_sp: 
                 T_list = []
-                # for temp_file in os.listdir("thermo/photo_cross/" + sp + "/"):
                 for temp_file in os.listdir(f"thermo/photo_cross/{sp}/"):
                     if temp_file.startswith(sp) and temp_file.endswith("K.csv"):
                         temp = temp_file
@@ -577,7 +564,6 @@ class ReadRate(object):
                 bin_max = cross_raw[sp]['lambda'][-1]
                 # photolysis threshold
                 try: diss_max = threshold[sp]
-                # except: print (sp + " not in threshol.txt"); raise
                 except: print (f"{sp} not in threshol.txt"); raise
                 
             else:
@@ -587,15 +573,11 @@ class ReadRate(object):
                 try:
                     if threshold[sp] > diss_max: 
                         diss_max = threshold[sp]
-                # except: print (sp + " not in threshol.txt"); raise
                 except: print (f"{sp} not in threshol.txt"); raise
                 
         # constraining the bin_min and bin_max by the default values defined in store.py
         bin_min = max(bin_min, var.def_bin_min)
         bin_max = min(bin_max, var.def_bin_max, diss_max)
-        # print ("Input stellar spectrum from " + "{:.1f}".format(var.def_bin_min) + " to " + "{:.1f}".format(var.def_bin_max) )
-        # print ("Photodissociation threshold: " + "{:.1f}".format(diss_max) )
-        # print ("Using wavelength bins from " + "{:.1f}".format(bin_min) + " to " +  str(bin_max) )
         print (f"Input stellar spectrum from {var.def_bin_min:.1f} to {var.def_bin_max:.1f}")
         print (f"Photodissociation threshold: {diss_max:.1f}")
         print (f"Using wavelength bins from {bin_min:.1f} to {bin_max}")
@@ -646,11 +628,9 @@ class ReadRate(object):
             inter_ratio = {} # excluding ionization branches
                                     
             for i in range(1,var.n_branch[sp]+1): # fill_value extends the first and last elements for branching ratios
-                # br_key = 'br_ratio_' + str(i)
                 br_key = f'br_ratio_{i}'
                 try:                  
                     inter_ratio[i] = interpolate.interp1d(ratio_raw[sp]['lambda'], ratio_raw[sp][br_key], bounds_error=False, fill_value=(ratio_raw[sp][br_key][0],ratio_raw[sp][br_key][-1]))
-                # except: print("The branches in the network file does not match the branchong ratio file for " + str(sp))
                 except: print(f"The branches in the network file does not match the branchong ratio file for {sp}")
             
             # using a loop instead of an array because it's easier to handle the branching ratios              
@@ -668,7 +648,7 @@ class ReadRate(object):
                 # T list of species sp that have T-depedent cross sections (inclduing 300 K for inter_cross)
                 T_list = np.array(var.cross_T_sp_list[sp])
                 max_T_sp = np.max(T_list)
-                min_T_sp = np.amin(T_list)
+                min_T_sp = np.min(T_list)
                 
                 for lev, Tz in enumerate(atm.Tco): # looping z 
                     
@@ -892,7 +872,7 @@ class Integration(object):
                                     conden_status = var.y[:,species.index(sp)] >= sat_rho
                                 
                                     if list(var.y[conden_status,species.index(sp)]): # if it condenses
-                                        min_sat = np.amin(atm.sat_mix[sp][conden_status]) # the mininum value of the saturation p within the saturation region
+                                        min_sat = np.min(atm.sat_mix[sp][conden_status]) # the mininum value of the saturation p within the saturation region
                                         conden_min_lev = np.where(atm.sat_mix[sp] == min_sat)[0][0]
                                         atm.conden_min_lev[sp] = conden_min_lev
                                         # print (sp + " is now fixed from " + "{:.2f}".format(atm.pco[atm.conden_min_lev[sp]]/1e6) + " bar." )
@@ -1033,8 +1013,8 @@ class Integration(object):
         y, ymix, y_time, t_time = var.y.copy(), var.ymix.copy(), var.y_time, var.t_time
         count = para.count
         
-        #slope_min = min( np.amin(atm.Kzz)/np.max(0.1*atm.Hp)**2 , 1.e-8)
-        slope_min = min( np.amin(atm.Kzz/(0.1*atm.Hp[:-1])**2) , 1.e-8)
+        #slope_min = min( np.min(atm.Kzz)/np.max(0.1*atm.Hp)**2 , 1.e-8)
+        slope_min = min( np.min(atm.Kzz/(0.1*atm.Hp[:-1])**2) , 1.e-8)
         slope_min = max(slope_min, 1.e-10)
 
         indx = np.abs(t_time-var.t*st_factor).argmin()    
@@ -2213,18 +2193,18 @@ class ODESolver(object):
     def print_nega(self, data_var, data_para): 
         
         nega_i = np.where(data_var.y<0)
-        print ('Negative y at time ' + str("{:.2e}".format(data_var.t)) + ' and step: ' + str(data_para.count) )
-        print ('Negative values:' + str(data_var.y[data_var.y<0]) )
-        print ('from levels: ' + str(nega_i[0]) )
-        print ('species: ' + str([species[_] for _ in nega_i[1]]) )
-        print ('dt= ' + str(data_var.dt))
+        print (f'Negative y at time {data_var.t:.2e} and step: {data_para.count}')
+        print (f'Negative values:{data_var.y[data_var.y<0]}')
+        print (f'from levels: {nega_i[0]}')
+        print (f'species: {[species[_] for _ in nega_i[1]]}')
+        print (f'dt= {data_var.dt}')
         print ('...reset dt to dt*0.2...')
         print ('------------------------------------------------------------------')
     
     def print_lossBig(self, para):
         
         print ('Element conservation is violated too large')
-        print ('at step: ' + str(para.count))
+        print (f'at step: {para.count}')
         print ('------------------------------------------------------------------')
         
     def thomas_vec(a, b, c, d): 
@@ -2274,7 +2254,7 @@ class ODESolver(object):
                 var.tau[j] += var.y[j,species.index(sp)] * atm.dz[j] * var.cross_scat[sp]
             # adding the layer above at the end of species loop   
             var.tau[j] += var.tau[j+1]
-               
+
     # Lines like chi = zeta_m**2*tran**2 - zeta_p**2 doing large np 2D array multiplication
     # can be sped up with cython           
     def compute_flux(self, var, atm): # Vectorise this loop!  
@@ -2639,9 +2619,9 @@ class Ros2(ODESolver):
         if vulcan_cfg.use_print_delta  and para.count % vulcan_cfg.print_prog_num==0:
             max_indx = np.nanargmax(delta/sol, axis=1)
             max_lev_indx = np.nanargmax(delta/sol)
-            print ('Largest delta (truncation error) from nz = ' + str(int(max_lev_indx/ni) ) )
+            print (f'Largest delta (truncation error) from nz = {int(max_lev_indx/ni)}')
             print ( np.array(species)[max_indx] )
-            print ('Largest delta (truncation error) from ' + species[max_indx%ni] + " at nz = "   + str(int(max_indx/ni) ) ) 
+            print (f'Largest delta (truncation error) from {species[max_indx%ni]} at nz = {int(max_indx/ni)}') 
 
         delta = np.max( delta[sol>0]/sol[sol>0] )
         
@@ -2805,14 +2785,10 @@ class Output(object):
             #           "  Press enter to overwrite the existing file,\n"
             #           "  or Ctrl-Z and Return to leave and choose a different out_name in vulcan_cfg.")
             
-            # print ('Warning... the output file: ' + str(out_name) + ' already exists.\n')
             print (f'Warning... the output file: {out_name} already exists.\n')
         
     def print_prog(self, var, para):
         indx_max = np.nanargmax(para.where_varies_most)
-        # print ('Elapsed time: ' +"{:.2e}".format(var.t) + ' || Step number: ' + str(para.count) + '/' + str(vulcan_cfg.count_max) )
-        # print ('longdy = ' + "{:.2e}".format(var.longdy) + '      || longdy/dt = ' + "{:.2e}".format(var.longdydt) + '  || dt = '+ "{:.2e}".format(var.dt) )     
-        # print ('from nz = ' + str(int(indx_max/ni)) + ' and ' + species[indx_max%ni])
         print (f'Elapsed time: {var.t:.2e} || Step number: {para.count}/{vulcan_cfg.count_max}') 
         print (f'longdy = {var.longdy:.2e}      || longdy/dt = {var.longdydt:.2e}  || dt = {var.dt:.2e}')      
         print (f'from nz = {int(indx_max/ni)} and {species[indx_max%ni]}')
@@ -2820,9 +2796,6 @@ class Output(object):
         
         
     def print_end_msg(self, var, para ): 
-        # print ("After ------- %s seconds -------" % ( time.time()- para.start_time ) + ' s CPU time')
-        # print (vulcan_cfg.out_name[:-4] + ' has successfully run to steady-state with ' + str(para.count) + ' steps and ' + str("{:.2e}".format(var.t)) + ' s' )
-        # print ('long dy = ' + str(var.longdy) + ' and long dy/dt = ' + str(var.longdydt) )
         print (f"After ------- {time.time()- para.start_time} seconds ------- s CPU time")  
         print (f'{vulcan_cfg.out_name[:-4]} has successfully run to steady-state with {para.count} steps and {"{:.2e}".format(var.t)} s' )
         print (f'long dy = {var.longdy} and long dy/dt = {var.longdydt}')
@@ -2852,7 +2825,7 @@ class Output(object):
         # copy the vulcan_cfg.py file
         with open('vulcan_cfg.py' ,'r') as f:
             cfg_str = f.read()
-        with open(dname + '/' + output_dir + "cfg_" + out_name[:-3] + "txt", 'w') as f: f.write(cfg_str)
+        with open(f'{dname}/{output_dir}cfg_{out_name[:-3]}txt', 'w') as f: f.write(cfg_str)
     
     def save_out(self, var, atm, para, dname): 
         output_dir, out_name = vulcan_cfg.output_dir, vulcan_cfg.out_name
