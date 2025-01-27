@@ -160,7 +160,7 @@ save_movie_rate = live_plot_frq
 y_time_freq = 1  #  storing data for every 'y_time_freq' step
 plot_spec = ['H2O', 'H', 'CH4', 'CO', 'CO2', 'C2H2', 'HCN', 'NH3' ]
 # output:
-output_humanread = True
-use_shark = True
+output_humanread = False
+use_shark = False
 save_evolution = False   # save the evolution of chemistry (y_time and t_time) for every save_evo_frq step
 save_evo_frq = 10

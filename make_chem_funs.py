@@ -83,34 +83,24 @@ def read_network():
                 line = "{:<4d} {:s}".format(i, "".join(line.partition("[")[1:]))
 
                 if not (not vulcan_cfg.use_photo and photo_re):
-                    # ofstr += re_label + str(i) + "\n"
-                    # ofstr += Rf[i] + "\n"
                     ofstr += f"{re_label}{i}\n"
                     ofstr += f"{Rf[i]}\n"
 
                 # storing only the photochemical reactions
                 elif re_label == "#P":
-                    # photo_str += re_label + str(i) + "\n"
-                    # photo_str += Rf[i] + "\n"
                     photo_str += f"{re_label}{i}\n"
                     photo_str += f"{Rf[i]}\n"
 
                 # storing only the condensation reactions
                 elif re_label == "#C":
-                    # ofstr += re_label + str(i) + "\n"
-                    # ofstr += Rf[i] + "\n"
                     ofstr += f"{re_label}{i}\n"
                     ofstr += f"{Rf[i]}\n"
 
                 elif re_label == "#R":
-                    # photo_str += re_label + str(i) + "\n"
-                    # photo_str += Rf[i] + "\n"
                     photo_str += f"{re_label}{i}\n"
                     photo_str += f"{Rf[i]}\n"
 
                 elif re_label == "#I":
-                    # photo_str += re_label + str(i) + "\n"
-                    # photo_str += Rf[i] + "\n"
                     photo_str += f"{re_label}{i}\n"
                     photo_str += f"{Rf[i]}\n"
 
@@ -126,8 +116,8 @@ def read_network():
                 # Rindx[i] = int(line.partition('[')[0].strip())
                 Rf[i] = line.partition("[")[-1].rpartition("]")[0].strip()
                 line = "{:<4d} {:s}".format(i, "".join(line.partition("[")[1:]))
-                ofstr += re_label + str(i) + "\n"
-                ofstr += Rf[i] + "\n"
+                ofstr += f"{re_label}{i}\n"
+                ofstr += f"{Rf[i]}\n"
 
                 i += 2
             new_network += line
@@ -242,157 +232,140 @@ def make_chemdf(re_table, ofname):
                 re_dict_str += "\n"
                 re_wM_dict_str += "\n"
 
-            re_dict_str += str(j) + ":" + str(re_reac_prod[j]) + ", "
+            re_dict_str += f"{j}:{re_reac_prod[j]}, "
             # reverse the list "re_reac_prod[j]" for the reverse reaction
-            re_dict_str += str(j + 1) + ":" + str(re_reac_prod[j][::-1]) + ", "
+            re_dict_str += f"{j+1}:{re_reac_prod[j][::-1]}, "
             # with M
-            re_wM_dict_str += str(j) + ":" + str(re_reac_prod_wM[j]) + ", "
+            re_wM_dict_str += f"{j}:{re_reac_prod_wM[j]}, "
             # reverse
-            re_wM_dict_str += str(j + 1) + ":" + str(re_reac_prod_wM[j][::-1]) + ", "
+            re_wM_dict_str += f"{j+1}:{re_reac_prod_wM[j][::-1]}, "
 
             for term in [ele for ele in reac_args if not ele == "M"]:
-                rate_str += "y[" + str(chem_dict[term]) + "], "
-            rate_str = rate_str[0:-2] + ")"
+                rate_str += f"y[{chem_dict[term]}], "
+            rate_str = f"{rate_str[0:-2]})"
 
-            v_exp += "k[" + str(j) + "]*"
+            v_exp += f"k[{j}]*"
             for term in reac:
                 if term[0] != 1:
                     if term[1] == "M":
-                        v_exp += term[1] + "**" + str(term[0]) + "*"
+                        v_exp += f"{term[1]}**{term[0]}*"
                     else:
                         v_exp += (
-                            "y["
-                            + str(chem_dict[term[1]])
-                            + "]"
-                            + "**"
-                            + str(term[0])
-                            + "*"
+                            f"y[{chem_dict[term[1]]}]**{term[0]}*"
                         )
                 else:
                     if term[1] == "M":
-                        v_exp += term[1] + "*"
+                        v_exp += f"{term[1]}*"
                     else:
-                        v_exp += "y[" + str(chem_dict[term[1]]) + "]*"
+                        v_exp += f"y[{chem_dict[term[1]]}]*"
             v_exp = v_exp[0:-1]  # Delete the last '*'
             fv_exp = v_exp
 
-            v_exp += " - k[" + str(j + 1) + "]*"
-            b_exp = " k[" + str(j + 1) + "]*"
+            v_exp += f" - k[{j + 1}]*"
+            b_exp = f" k[{j + 1}]*"
 
             for term in prod:
                 if term[0] != 1:
                     if term[1] == "M":
-                        v_exp += term[1] + "**" + str(term[0]) + "*"
-                        b_exp += term[1] + "**" + str(term[0]) + "*"
+                        v_exp += f"{term[1]}**{term[0]}*"
+                        b_exp += f"{term[1]}**{term[0]}*"
                     else:
-                        v_exp += (
-                            "y["
-                            + str(chem_dict[term[1]])
-                            + "]"
-                            + "**"
-                            + str(term[0])
-                            + "*"
-                        )
-                        b_exp += (
-                            "y["
-                            + str(chem_dict[term[1]])
-                            + "]"
-                            + "**"
-                            + str(term[0])
-                            + "*"
-                        )
+                        v_exp += f"y[{chem_dict[term[1]]}]**{term[0]}*"
+                        
+                        b_exp += f"y[{chem_dict[term[1]]}]**{term[0]}*"
+                        
                 else:
                     if term[1] == "M":
-                        v_exp += term[1] + "*"
-                        b_exp += term[1] + "*"
+                        v_exp += f"{term[1]}*"
+                        b_exp += f"{term[1]}*"
                     else:
-                        v_exp += "y[" + str(chem_dict[term[1]]) + "]*"
-                        b_exp += "y[" + str(chem_dict[term[1]]) + "]*"
+                        v_exp += f"y[{chem_dict[term[1]]}]*"
+                        b_exp += f"y[{chem_dict[term[1]]}]*"
             v_exp = v_exp[0:-1]  # Delete the last '*'
             rv_exp = b_exp[0:-1]
 
             for term in reac_noM:
 
                 # term[0] os the stoi-number of the species
-                reac_dict[chem_dict[term[1]]] += " -" + str(term[0]) + "*" + rate_str
+                reac_dict[chem_dict[term[1]]] += f" -{term[0]}*{rate_str}"
 
                 # for each term of prod and loss individually
-                sp_rate[term[1]].append(" -" + str(term[0]) + "*" + fv_exp)
-                sp_rate[term[1]].append(" +" + str(term[0]) + "*" + rv_exp)
+                sp_rate[term[1]].append(f" -{term[0]}*{fv_exp}")
+                sp_rate[term[1]].append(f" +{term[0]}*{rv_exp}")
 
                 if term[0] == 1:
-                    exp_reac_dict[chem_dict[term[1]]] += " -" + "(" + v_exp + ")"
+                    exp_reac_dict[chem_dict[term[1]]] += f" -({v_exp})"
                     count += 1
                 else:
                     exp_reac_dict[chem_dict[term[1]]] += (
-                        " -" + str(term[0]) + "*(" + v_exp + ")"
+                        f" -{term[0]}*({v_exp})"
                     )
                     count += 1
 
             for term in prod_noM:
                 reac_dict[chem_dict[term[1]]] += " +" + str(term[0]) + "*" + rate_str
-                sp_rate[term[1]].append(" +" + str(term[0]) + "*" + fv_exp)
-                sp_rate[term[1]].append(" -" + str(term[0]) + "*" + rv_exp)
+                sp_rate[term[1]].append(f" +{term[0]}*{fv_exp}")
+                sp_rate[term[1]].append(f" -{term[0]}*{rv_exp}")
 
                 if term[0] == 1:
-                    exp_reac_dict[chem_dict[term[1]]] += " +" + "(" + v_exp + ")"
+                    exp_reac_dict[chem_dict[term[1]]] += f" +({v_exp})"
                     count += 1
                 else:
                     exp_reac_dict[chem_dict[term[1]]] += (
-                        " +" + str(term[0]) + "*(" + v_exp + ")"
+                        f" +{term[0]}*({v_exp})"
                     )
                     count += 1
 
-            v_str = "#" + line + "\n"
-            v_str += "v_" + str(j) + " = lambda k, M, "
+            v_str = f"#{line}\n"
+            v_str += f"v_{j} = lambda k, M, "
 
             for term in reac_args_noM:
-                v_str += term + ", "
-            v_str = v_str[0:-2] + " : "
-            v_str += "k[" + str(j) + "]*"
+                v_str += f"{term}, "
+            v_str = f"{v_str[0:-2]} : "
+            v_str += f"k[{j}]*"
             for term in reac:
                 if term[0] != 1:
-                    v_str += term[1] + "**" + str(term[0]) + "*"
+                    v_str +=  f"{term[1]}**{term[0]}*"
                 else:
-                    v_str += term[1] + "*"
+                    v_str += f"{term[1]}*"
             v_str = v_str[0:-1]  # Delete the last '*'
 
-            v_str += " - k[" + str(j + 1) + "]*"
+            v_str += f" - k[{j + 1}]*"
             for term in prod:
                 if term[0] != 1:
-                    v_str += term[1] + "**" + str(term[0]) + "*"
+                    v_str += f"{term[1]}**{term[0]}*"
                 else:
-                    v_str += term[1] + "*"
+                    v_str += f"{term[1]}*"
             v_str = v_str[0:-1]
 
             reac_list.append(v_str)
 
             # ouput of each single rate from k1...
-            rate_exp += "k[" + str(j) + "]*"
+            rate_exp += f"k[{j}]*"
             for term in reac:
                 if term[1] == "M":
                     rate_exp += "M*"
                 else:
                     if term[0] == 1:
-                        rate_exp += "y[" + str(chem_dict[term[1]]) + "]*"
+                        rate_exp += f"y[{chem_dict[term[1]]}]*" 
                     else:
                         rate_exp += (
-                            "y[" + str(chem_dict[term[1]]) + "]**" + str(term[0]) + "*"
+                            f"y[{chem_dict[term[1]]}]**{term[0]}*"
                         )
 
             rate_exp = rate_exp[0:-1]  # Delete the last '*'
             rate_dict[j] = rate_exp
             rate_exp = ""
-            rate_exp += "k[" + str(j + 1) + "]*"  # j+1 even number for reverse index
+            rate_exp += f"k[{j + 1}]*"  # j+1 even number for reverse index
             for term in prod:
                 if term[1] == "M":
                     rate_exp += "M*"
                 else:
                     if term[0] == 1:
-                        rate_exp += "y[" + str(chem_dict[term[1]]) + "]*"
+                        rate_exp += f"y[{chem_dict[term[1]]}]*"
                     else:
                         rate_exp += (
-                            "y[" + str(chem_dict[term[1]]) + "]**" + str(term[0]) + "*"
+                            f"y[{chem_dict[term[1]]}]**{term[0]}*"
                         )
             rate_exp = rate_exp[0:-1]  # Delete the last '*'
             rate_dict[j + 1] = rate_exp
@@ -408,27 +381,27 @@ def make_chemdf(re_table, ofname):
 
     ofstr = "#!/usr/bin/python\n\nfrom scipy import *\nimport numpy as np\nfrom phy_const import kb, Navo\nimport vulcan_cfg\n\n"
     ofstr += "'''\n## Reaction ##\n\n"
-    ofstr += re_table + "\n\n"
+    ofstr += f"{re_table}\n\n"
 
     ofstr += "## Mapping ##\n\n"
     for term in chem_dict:
         chem_dict_r.update({chem_dict[term]: term})
     for term in reac_dict:
-        ofstr += chem_dict_r[term] + ": y[" + str(term) + "], "
+        ofstr += f"{chem_dict_r[term]}: y[{term}], "
     ofstr += "\n\n"
     for term in reac_dict:
-        ofstr += chem_dict_r[term] + "\t" + str(term) + "\t" + reac_dict[term] + "\n"
+        ofstr += f"{chem_dict_r[term]}\t{term}\t{reac_dict[term]}\n"
     for i in chem_dict_r:
         spec_list.append(chem_dict_r[i])
 
     ofstr += "'''\n\n"
 
     ofstr += "#species list\n"
-    ofstr += "spec_list = " + str(spec_list)
+    ofstr += f"spec_list = {spec_list}"
     ofstr += "\n# the total number of species"
-    ofstr += "\nni = " + str(len(chem_dict.keys()))
+    ofstr += f"\nni = {len(chem_dict.keys())}"
     ofstr += "\n# the total number of reactions (forward and reverse)"
-    ofstr += "\nnr = " + str(len(rate_dict.keys()))
+    ofstr += f"\nnr = {len(rate_dict.keys())}"
 
     ofstr += (
         "\n\n# store the products and the reactants in the 1st and the 2nd element for reaction j (without M)\n"
@@ -465,7 +438,7 @@ def make_chemdf(re_table, ofname):
     ost += "\t rate_str = {}\n".expandtabs(3)
     ost += "\t re_sp_dic = {}\n".expandtabs(3)
     for sp in sp_rate:
-        ost += '    rate_str["' + sp + '"] = ['
+        ost += f'    rate_str["{sp}"] = ['
         re_sp_dic[sp] = []
         for i in sp_rate[sp]:
             ost += i
@@ -575,23 +548,16 @@ def make_Gibbs(re_table, gibbs_text, ofname):
             reac_args_noM = [ele for ele in reac_args if not ele == "M"]
 
             for term in [ele for ele in reac_args if not ele == "M"]:
-                rate_str += "y[" + str(chem_dict[term]) + "], "
+                rate_str += f"y[{chem_dict[term]}], "
             rate_str = rate_str[0:-2] + ")"
 
-            v_exp += "k[" + str(j) + "]*"
+            v_exp += f"k[{j}]*"
             for term in reac:
                 if term[0] != 1:
                     if term[1] == "M":
-                        v_exp += term[1] + "**" + str(term[0]) + "*"
+                        v_exp += f"{term[1]}**{term[0]}*"
                     else:
-                        v_exp += (
-                            "y["
-                            + str(chem_dict[term[1]])
-                            + "]"
-                            + "**"
-                            + str(term[0])
-                            + "*"
-                        )
+                        v_exp += (f"y[{chem_dict[term[1]]}]**{term[0]}*")
                 else:
                     if term[1] == "M":
                         v_exp += term[1] + "*"
